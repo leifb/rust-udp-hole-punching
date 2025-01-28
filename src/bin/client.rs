@@ -8,7 +8,7 @@ const LOCAL_ADDR: &'static str = "0.0.0.0:39738";
 
 fn main() {
     // Get name of this client from command line arg
-    let mut args = env::args();
+    let mut args = env::args().skip(1);
     let client_name = args.next().expect("Client needs at least one argument");
     let other = args.next();
 
@@ -16,18 +16,19 @@ fn main() {
     let bincode_config = bincode::config::standard();
     let mut buf = [0u8; 128];
 
-    println!("[INFO] Client name: {}", client_name);
+    println!("[INFO] This client: {}", client_name);
+    println!("[INFO] Other client: {:?}", other);
     println!("[INFO] Sending register packet to server on {}", SERVER_ADDR);
     let message = Packet::Register(client_name);
     let message = bincode::encode_to_vec(message, bincode_config).unwrap();
     socket.send_to(message.as_slice(), SERVER_ADDR).unwrap();
 
-    println!("[INFO] Waiting ack...");
+    println!(" > Waiting ack...");
     let (_, _) = socket.recv_from(&mut buf).unwrap();
     let (message, _): (Packet, usize) = bincode::decode_from_slice(&buf, bincode_config).unwrap();
     match message {
         Packet::RegisterAck => {
-            println!("[INFO] Sucessfully register at hole-punch server");
+            println!(" > Sucessfully register at hole-punch server");
         },
         _ => {
             panic!("Server replied with wrong package");
@@ -40,7 +41,7 @@ fn main() {
         let message = bincode::encode_to_vec(message, bincode_config).unwrap();
         let mut other: String = String::new();
         loop {
-            println!("[INFO] Sending hole punch request...");
+            println!(" > Sending hole punch request...");
             socket.send_to(message.as_slice(), SERVER_ADDR).unwrap();
 
             let (_, _) = socket.recv_from(&mut buf).unwrap();
