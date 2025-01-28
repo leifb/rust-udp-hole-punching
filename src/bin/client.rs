@@ -62,7 +62,7 @@ fn main() {
             }
         }
 
-        println!("[INFO] Sending message directly to other client");
+        println!("[INFO] Sending message directly to other client at {}", other);
         let message = Packet::Message("Hello from client!".to_string());
         let message = bincode::encode_to_vec(message, bincode_config).unwrap();
         socket.send_to(message.as_slice(), other).unwrap();
