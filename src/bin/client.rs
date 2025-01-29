@@ -1,32 +1,32 @@
 use std::{env, net::UdpSocket, thread::sleep, time::Duration};
 
-use hole_punch::Packet;
+use hole_punch::{Packet, SERVER_PORT};
 
-const SERVER_ADDR: &'static str = "168.119.58.166:39738";
 const LOCAL_ADDR: &'static str = "0.0.0.0:0";
 
-
 fn main() {
-    // Get name of this client from command line arg
+    // Get command line args
     let mut args = env::args().skip(1);
-    let local_client_name = args.next().expect("Client needs at least one argument");
-    let remote_client_name = args.next();
-
+    let server_ip = args.next().expect("Missing argument for server address");
+    let local_client_name = args.next().expect("Missing argument for client name");
+    let remote_client_name = args.next(); // Second client name is optional
+    
+    let server = format!("{}:{}", server_ip, SERVER_PORT);
     let socket = UdpSocket::bind(LOCAL_ADDR).unwrap();
-    println!("[INFO] Using loclat port: {}", socket.local_addr().unwrap().port());
-    let bincode_config = bincode::config::standard();
+    
     let mut buf = [0u8; 128];
 
+    println!("[INFO] Using loclat port: {}", socket.local_addr().unwrap().port());
+    println!("[INFO] Server: {}", local_client_name);
     println!("[INFO] This client: {}", local_client_name);
     println!("[INFO] Other client: {:?}", remote_client_name);
-    println!("[INFO] Sending register packet to server on {}", SERVER_ADDR);
-    let message = Packet::Register(local_client_name.clone());
-    let message = bincode::encode_to_vec(message, bincode_config).unwrap();
-    socket.send_to(message.as_slice(), SERVER_ADDR).unwrap();
+    println!("[INFO] Sending register packet to server on {}", server);
+    let message = Packet::Register(local_client_name.clone()).encode();
+    socket.send_to(message.as_slice(), &server).unwrap();
 
     println!(" > Waiting ack...");
     let (_, _) = socket.recv_from(&mut buf).unwrap();
-    let (message, _): (Packet, usize) = bincode::decode_from_slice(&buf, bincode_config).unwrap();
+    let message = Packet::decode(&buf);
     match message {
         Packet::RegisterAck => {
             println!(" > Sucessfully register at hole-punch server");
@@ -37,16 +37,16 @@ fn main() {
     }
 
     if let Some(remote_client_name) = remote_client_name {
+        // If this is the client requesting the hole punch
         println!("[INFO] Requesting hole punch to other client");
-        let message = Packet::HolePunchRequest(remote_client_name);
-        let message = bincode::encode_to_vec(message, bincode_config).unwrap();
+        let message = Packet::HolePunchRequest(remote_client_name).encode();
         let remote_client_address: String;
         loop {
             println!(" > Sending hole punch request...");
-            socket.send_to(message.as_slice(), SERVER_ADDR).unwrap();
+            socket.send_to(message.as_slice(), &server).unwrap();
 
             let (_, _) = socket.recv_from(&mut buf).unwrap();
-            let (message, _): (Packet, usize) = bincode::decode_from_slice(&buf, bincode_config).unwrap();
+            let message = Packet::decode(&buf);
             match message {
                 Packet::HolePunchInitiate { client_name, client_address } => {
                     println!(" > OK! Initiating hole punch to {}!", client_name);
@@ -69,11 +69,12 @@ fn main() {
             local_client_name,
         );
     } else {
+        // If this is the client waiting for the hole punch
         println!("[INFO] Waiting for hole punch to start...");
         let remote_client_address: String;
         loop {
             let (_, _) = socket.recv_from(&mut buf).unwrap();
-            let (message, _): (Packet, usize) = bincode::decode_from_slice(&buf, bincode_config).unwrap();
+            let message = Packet::decode(&buf);
             println!(" > Recieved {:?}", message);
             match message {
                 Packet::HolePunchInitiate { client_name, client_address } => {
@@ -99,23 +100,23 @@ fn send_messages_to_other_client(
     local_client_name: String,
 ) {
     println!(" > Sending message to other client at {}", remote_client_address);
-    let bincode_config = bincode::config::standard();
     let mut buf = [0u8; 128];
     socket.set_read_timeout(Some(Duration::from_secs(1))).unwrap();
 
     loop {
-        let message = Packet::Message(format!("Hello from {local_client_name}"));
-        let message = bincode::encode_to_vec(message, bincode_config).unwrap();
+        let message = Packet::Message(format!("Hello from {local_client_name}")).encode();
         socket.send_to(message.as_slice(), &remote_client_address).unwrap();
         
         match socket.recv_from(&mut buf) {
             Ok(_) => {
-                let (message, _): (Packet, usize) = bincode::decode_from_slice(&buf, bincode_config).unwrap();
+                let message = Packet::decode(&buf);
                 println!(" > Recieved {:?}", message);
             },
             Err(_) => {
                 println!(" > no response yet");
             }
         }
+
+        sleep(Duration::from_secs(1));
     }
 }
