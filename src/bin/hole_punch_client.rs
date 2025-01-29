@@ -15,7 +15,7 @@ fn main() {
     let socket = UdpSocket::bind(LOCAL_ADDR).unwrap();
     let mut buf = [0u8; 128];
 
-    println!("[INFO] Server: {}", local_client_name);
+    println!("[INFO] Server: {}", server_ip);
     println!("[INFO] This client: {}", local_client_name);
     println!("[INFO] Other client: {:?}", remote_client_name);
     println!("[INFO] Sending register packet to server on {}", server);
