@@ -1,4 +1,4 @@
-# UPD hole punching in rust
+# UDP hole punching in rust
 
 This project demonstrates UDP hole punching in rust.
 
@@ -10,7 +10,7 @@ This project demonstrates UDP hole punching in rust.
 Usually, clients that are behind a firewall / router / NAT cannot be connected directly to.
 This is because connections from the outside will only be forwarded to the client if once
 the client sent a package to that connection first. This makes is hard to implement peer to
-peer connections. Hole punching is one way to solve this issue an therfore allows two peers
+peer connections. Hole punching is one way to solve this issue an therefore allows two peers
 to talk to each other, even if they are usually not reachable from the outside.
 
 ## How does it work?
@@ -46,7 +46,7 @@ cargo run --bin client <ip or domain of your sever> <name client b> <name client
 
 ## Detailed process
 
-This section descibes the protocol used in this demonstration. Other implementeations
+This section describes the protocol used in this demonstration. Other implementations
 might be slightly different, but the concept is the same.
 
 The process can be split in two, a `registering` phase and a `hole punching` phase.
@@ -69,6 +69,6 @@ Both clients need to register.
      and the process failed.
 3. The `server` sends both clients a `HolePunchInitiate` packet containing
    the address of the other client.
-4. Both `clients` start continuously sending `Message` packates to the
+4. Both `clients` start continuously sending `Message` packets to the
    address received by the server.
    

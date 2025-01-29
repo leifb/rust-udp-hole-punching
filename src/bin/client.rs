@@ -13,10 +13,8 @@ fn main() {
     
     let server = format!("{}:{}", server_ip, SERVER_PORT);
     let socket = UdpSocket::bind(LOCAL_ADDR).unwrap();
-    
     let mut buf = [0u8; 128];
 
-    println!("[INFO] Using loclat port: {}", socket.local_addr().unwrap().port());
     println!("[INFO] Server: {}", local_client_name);
     println!("[INFO] This client: {}", local_client_name);
     println!("[INFO] Other client: {:?}", remote_client_name);
@@ -29,7 +27,7 @@ fn main() {
     let message = Packet::decode(&buf);
     match message {
         Packet::RegisterAck => {
-            println!(" > Sucessfully register at hole-punch server");
+            println!(" > Successfully register at hole-punch server");
         },
         _ => {
             panic!("Server replied with wrong package");
@@ -75,7 +73,7 @@ fn main() {
         loop {
             let (_, _) = socket.recv_from(&mut buf).unwrap();
             let message = Packet::decode(&buf);
-            println!(" > Recieved {:?}", message);
+            println!(" > Received {:?}", message);
             match message {
                 Packet::HolePunchInitiate { client_name, client_address } => {
                     println!(" > OK! Initiating hole punch to {}!", client_name);
@@ -110,7 +108,7 @@ fn send_messages_to_other_client(
         match socket.recv_from(&mut buf) {
             Ok(_) => {
                 let message = Packet::decode(&buf);
-                println!(" > Recieved {:?}", message);
+                println!(" > Received {:?}", message);
             },
             Err(_) => {
                 println!(" > no response yet");

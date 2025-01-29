@@ -12,7 +12,7 @@ fn main() {
     loop {
         let (_, client_address) = socket.recv_from(&mut buffer).unwrap();
         let message = Packet::decode(&buffer);
-        println!("[RECIEVED] {:?}", message);
+        println!("[RECEIVED] {:?}", message);
 
         match message {
             Packet::Register(name) => {
