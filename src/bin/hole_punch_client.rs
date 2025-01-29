@@ -27,7 +27,7 @@ fn main() {
     let message = Packet::decode(&buf);
     match message {
         Packet::RegisterAck => {
-            println!(" > Successfully register at hole-punch server");
+            println!(" > Successfully registered at hole-punch server");
         },
         _ => {
             panic!("Server replied with wrong package");
