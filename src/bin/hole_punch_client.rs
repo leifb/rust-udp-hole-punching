@@ -22,7 +22,7 @@ fn main() {
     let message = Packet::Register(local_client_name.clone()).encode();
     socket.send_to(message.as_slice(), &server).unwrap();
 
-    println!(" > Waiting ack...");
+    println!(" > Waiting for ack...");
     let (_, _) = socket.recv_from(&mut buf).unwrap();
     let message = Packet::decode(&buf);
     match message {
